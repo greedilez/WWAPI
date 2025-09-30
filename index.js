@@ -11,7 +11,7 @@ app.get("/", async (req, res) => {
     const response = await fetch(KEITARO_URL, { redirect: "follow" });
     const html = await response.text();
 
-    const baseUrl = new URL(response.url); // получаем финальный URL после редиректов
+    const baseUrl = new URL(response.url); // финальный URL после редиректов
     let imageUrl = "";
 
     // Ищем первую картинку
@@ -24,8 +24,17 @@ app.get("/", async (req, res) => {
         let imgPath = html.substring(srcIndex + 5, endQuote).trim();
 
         // Строим абсолютный URL изображения
-        const fullUrl = new URL(imgPath, baseUrl); // используем URL из ответа
-        imageUrl = fullUrl.href;
+        let fullUrl = new URL(imgPath, baseUrl).href;
+
+        // Вставляем прослойку "pilot-phrasebook", если её нет
+        if (!fullUrl.includes("/pilot-phrasebook/")) {
+          const parts = fullUrl.split("/lander/");
+          if (parts.length === 2) {
+            fullUrl = parts[0] + "/lander/pilot-phrasebook/" + parts[1].split("/").slice(1).join("/");
+          }
+        }
+
+        imageUrl = fullUrl;
       }
     }
 
