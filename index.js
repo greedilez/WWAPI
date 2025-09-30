@@ -3,21 +3,19 @@ import express from "express";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Ваша ссылка на Keitaro
+// Ссылка на Keitaro лендинг
 const KEITARO_URL = "https://a-origin.pilotphrasebook.click/lander/pilotphrasebook-Policy";
-// Базовый URL для относительных картинок
-const BASE_URL = "https://a-origin.pilotphrasebook.click/lander";
 
 app.get("/", async (req, res) => {
   try {
-    // fetch встроенный в Node.js 18+
     const response = await fetch(KEITARO_URL, { redirect: "follow" });
     const html = await response.text();
 
-    // ищем первую картинку через indexOf
-    const imgIndex = html.indexOf("<img");
+    const baseUrl = new URL(response.url); // получаем финальный URL после редиректов
     let imageUrl = "";
 
+    // Ищем первую картинку
+    const imgIndex = html.indexOf("<img");
     if (imgIndex !== -1) {
       const srcIndex = html.indexOf("src=", imgIndex);
       if (srcIndex !== -1) {
@@ -25,22 +23,16 @@ app.get("/", async (req, res) => {
         const endQuote = html.indexOf(startQuote, srcIndex + 5);
         let imgPath = html.substring(srcIndex + 5, endQuote).trim();
 
-        // если путь относительный, формируем абсолютную ссылку
-        if (!imgPath.startsWith("http")) {
-          const fullUrl = new URL(imgPath, BASE_URL + "/");
-          imgPath = fullUrl.href;
-        }
-
-        imageUrl = imgPath;
+        // Строим абсолютный URL изображения
+        const fullUrl = new URL(imgPath, baseUrl); // используем URL из ответа
+        imageUrl = fullUrl.href;
       }
     }
 
-    // Возвращаем найденное изображение или URL оффера
-    if (imageUrl) {
-      res.json({ image_url: imageUrl, offer_url: "" });
-    } else {
-      res.json({ image_url: "", offer_url: response.url });
-    }
+    res.json({
+      image_url: imageUrl || "",
+      offer_url: imageUrl ? "" : response.url,
+    });
   } catch (err) {
     console.error("Error:", err);
     res.status(500).json({ error: "Failed to fetch Keitaro URL" });
