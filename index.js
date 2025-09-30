@@ -1,13 +1,39 @@
 import express from "express";
+import fetch from "node-fetch";
+import * as cheerio from "cheerio";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-  res.json({
-    image_url: "https://raw.githubusercontent.com/greedilez/WWAPI/main/360_F_198733249_hjyzxGkoeqCmBw5ZBE1j8T0wj8oO2r2Z.jpg",
-    offer_url: "https://example.com/offer"
-  });
+// ссылка на кейтаро (одна на всё)
+const KEITARO_URL = "https://a-origin.pilotphrasebook.click/pilotphrasebook-Policy";
+
+app.get("/", async (req, res) => {
+  try {
+    const response = await fetch(KEITARO_URL, { redirect: "follow" });
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // ищем первую картинку
+    const imgSrc = $("img").first().attr("src");
+
+    if (imgSrc) {
+      // если есть картинка
+      res.json({
+        image_url: imgSrc,
+        offer_url: ""
+      });
+    } else {
+      // картинок нет → значит это оффер
+      res.json({
+        image_url: "",
+        offer_url: response.url // реальный конечный оффер (после редиректа кейтаро)
+      });
+    }
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Failed to fetch Keitaro URL" });
+  }
 });
 
 app.listen(PORT, () => {
