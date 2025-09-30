@@ -4,9 +4,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Ваша ссылка на кейтаро
-const KEITARO_URL = "https://a-origin.pilotphrasebook.click/pilotphrasebook-Policy";
+const KEITARO_URL = "https://a-origin.pilotphrasebook.click/lander/pilotphrasebook-Policy";
 // Базовый URL для относительных картинок
-const BASE_URL = "https://a-origin.pilotphrasebook.click/";
+const BASE_URL = "https://a-origin.pilotphrasebook.click/lander";
 
 app.get("/", async (req, res) => {
   try {
