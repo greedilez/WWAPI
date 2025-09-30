@@ -5,6 +5,8 @@ const PORT = process.env.PORT || 3000;
 
 // Ваша ссылка на кейтаро
 const KEITARO_URL = "https://a-origin.pilotphrasebook.click/pilotphrasebook-Policy";
+// Базовый URL для относительных картинок
+const BASE_URL = "https://a-origin.pilotphrasebook.click/";
 
 app.get("/", async (req, res) => {
   try {
@@ -12,7 +14,7 @@ app.get("/", async (req, res) => {
     const response = await fetch(KEITARO_URL, { redirect: "follow" });
     const html = await response.text();
 
-    // ищем первую картинку просто через indexOf и substring
+    // ищем первую картинку через indexOf
     const imgIndex = html.indexOf("<img");
     let imageUrl = "";
     if (imgIndex !== -1) {
@@ -20,7 +22,14 @@ app.get("/", async (req, res) => {
       if (srcIndex !== -1) {
         const startQuote = html[srcIndex + 4];
         const endQuote = html.indexOf(startQuote, srcIndex + 5);
-        imageUrl = html.substring(srcIndex + 5, endQuote);
+        let imgPath = html.substring(srcIndex + 5, endQuote).trim();
+
+        // если путь относительный, добавляем базовый URL
+        if (!imgPath.startsWith("http")) {
+          imgPath = BASE_URL + imgPath.replace(/^\/+/, "");
+        }
+
+        imageUrl = imgPath;
       }
     }
 
